@@ -1,6 +1,6 @@
 package org.idempiere.common.util
 
-import company.bigger.common.db.CConnection
+import org.idempiere.common.db.CConnection
 import java.math.BigDecimal
 import java.sql.CallableStatement
 import java.sql.Connection
@@ -17,8 +17,6 @@ import java.util.logging.Level
 import javax.sql.RowSet
 import org.idempiere.common.db.Database
 import org.idempiere.common.db.ProxyFactory
-import org.idempiere.common.exceptions.DBException
-import org.idempiere.icommon.db.AdempiereDatabase
 import org.slf4j.LoggerFactory
 
 /**
@@ -101,7 +99,7 @@ get() = createConnection(true, true, Connection.TRANSACTION_READ_COMMITTED) // 	
  */
    val database: AdempiereDatabase?
 get() {
-if (s_cc != null) return s_cc!!.getDatabase()
+if (s_cc != null) return s_cc!!.database
 log.error("No Database Connection")
 return null
 } //  getDatabase
@@ -113,7 +111,7 @@ return null
  */
    val isOracle: Boolean
 get() {
-if (s_cc != null) return s_cc!!.isOracle()
+if (s_cc != null) return s_cc!!.isOracle
 log.error("No Database Connection")
 return false
 } // 	isOracle
@@ -126,7 +124,7 @@ return false
  */
    val isPostgreSQL: Boolean
 get() {
-if (s_cc != null) return s_cc!!.isPostgreSQL()
+if (s_cc != null) return s_cc!!.isPostgreSQL
 log.error("No Database")
 return false
 } // 	isPostgreSQL
@@ -139,7 +137,7 @@ return false
  */
    val databaseInfo: String
 get() {
-    return if (s_cc != null) s_cc!!.getDbInfo() else "No Database"
+    return if (s_cc != null) s_cc!!.dbInfo else "No Database"
 } // 	getDatabaseInfo
 
 /**
@@ -242,7 +240,7 @@ s_cc = cc
 s_cc!!.setDataSource()
 
       //log.isTraceEnabled
-if (log.isTraceEnabled) log.trace(s_cc + " - DS=" + s_cc!!.isDataSource())
+if (log.isTraceEnabled) log.trace(s_cc.toString() + " - DS=" + s_cc!!.isDataSource)
  // 	Trace.printStack();
   } //  setDBTarget
 
@@ -430,8 +428,8 @@ pstmt = prepareStatement(sql, null)
 rs = pstmt!!.executeQuery()
 if (rs!!.next()) version = rs!!.getString(1)
 } catch (e: SQLException) {
-log.log(
-Level.SEVERE, "Problem with AD_System Table - Run system.sql script - " + e.toString())
+log.error(
+"Problem with AD_System Table - Run system.sql script - " + e.toString())
 return false
 } finally
 {
@@ -440,7 +438,7 @@ close(pstmt)
 rs = null
 pstmt = null
 }
-if (log.isLoggable(Level.INFO)) log.info("DB_Version=$version")
+if (log.isInfoEnabled) log.info("DB_Version=$version")
  //  Identical DB version
     return if (DB_VERSION == version) true else false
 } //  isDatabaseOK
@@ -468,8 +466,8 @@ buildDatabase = rs!!.getString(1)
 failOnBuild = rs!!.getString(2) == "Y"
 }
 } catch (e: SQLException) {
-log.log(
-Level.SEVERE, "Problem with AD_System Table - Run system.sql script - " + e.toString())
+log.error(
+"Problem with AD_System Table - Run system.sql script - " + e.toString())
 return false
 } finally
 {
@@ -478,7 +476,7 @@ close(pstmt)
 rs = null
 pstmt = null
 }
-if (log.isLoggable(Level.INFO)) {
+if (log.isInfoEnabled) {
 log.info("Build DB=$buildDatabase")
 log.info("Build Cl=$buildClient")
 }
@@ -492,11 +490,11 @@ val title = AD_Message // DAP TODO org.idempiere.Adempiere.getName() + " " +  Ms
     var msg = AD_Message // TODO DAP Msg.getMsg(ctx, AD_Message);   //  complete message
 msg = MessageFormat.format(msg, *arrayOf<Any>(buildClient, buildDatabase))
 if (!failOnBuild) {
-log.warning(msg)
+log.warn(msg)
 return true
 }
 
-log.log(Level.SEVERE, msg)
+log.error(msg)
 return false
 } //  isDatabaseOK
 
@@ -511,7 +509,7 @@ closed = true
 s_cc!!.setDataSource(null)
 }
 s_cc = null
-if (closed) log.fine("closed")
+if (closed) log.trace("closed")
 } // 	closeTarget
 
 /**
@@ -1057,7 +1055,7 @@ return getSQLValue(trxName, sql, *params.toTypedArray())
  * @return first value or null
  * @throws DBException if there is any SQLException
  */
-   fun getSQLValueStringEx(trxName: String, sql: String, vararg params: Any): String? {
+   fun getSQLValueStringEx(trxName: String?, sql: String, vararg params: Any): String? {
 var retValue: String? = null
 var pstmt: PreparedStatement? = null
 var rs: ResultSet? = null
