@@ -36,6 +36,9 @@ open class Application : WebMvcConfigurer {
     }
 }
 
+/**
+ * Listener to run after successful application start.
+ */
 @Component
 open class StartupApplicationListener(val ini: Ini) : ApplicationListener<ContextRefreshedEvent> {
     override fun onApplicationEvent(event: ContextRefreshedEvent) {

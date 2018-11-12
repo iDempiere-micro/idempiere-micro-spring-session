@@ -11,18 +11,6 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 open class Ini {
-    companion object {
-        private var _instance: Ini? = null
-        internal val instance get() = _instance!!
-        private fun setInstance(i: Ini) {
-            _instance = i
-        }
-    }
-
-    init {
-        setInstance(this)
-    }
-
     @Value("\${session.url}")
     internal lateinit var url: String
     @Value("\${session.username}")
