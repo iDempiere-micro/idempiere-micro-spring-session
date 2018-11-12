@@ -36,10 +36,10 @@ class LoginService {
     @Value("\${user.locking.max_password_age_day:365}")
     private lateinit var USER_LOCKING_MAX_PASSWORD_AGE_DAY: String
 
-    fun findByUsername(appUser: String): List<User> {
+    fun findByUsername(appUser: String?): List<User> {
         log.info("User=$appUser")
 
-        if (appUser.isEmpty()) {
+        if (appUser == null || appUser.isEmpty()) {
             log.warn("No Apps User")
             return listOf()
         }
@@ -117,7 +117,7 @@ class LoginService {
                 hash_password -> authenticateHash(it, appPwd)
                 else -> // password not hashed
                     it.password != null && it.password == appPwd
-            }
+            } && !it.isLocked
         }
         return authenticatedUsers.toTypedArray()
     }

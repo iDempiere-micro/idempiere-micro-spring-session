@@ -1,6 +1,5 @@
 package company.bigger.dto
 
-import software.hsharp.core.models.NameKeyPair
 import java.util.Arrays
 
 data class UserLoginModelResponse(
