@@ -41,7 +41,7 @@ fun convertHexString(hexString: String?): ByteArray? {
  * @return HexString
  */
 fun convertToHexString(bytes: ByteArray): String {
-    //	see also Util.toHex
+    // 	see also Util.toHex
     val size = bytes.size
     val buffer = StringBuilder(size * 2)
     for (i in 0 until size) {

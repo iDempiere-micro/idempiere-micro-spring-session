@@ -1,7 +1,6 @@
 package company.bigger.util
 
 import com.zaxxer.hikari.HikariDataSource
-import org.springframework.stereotype.Component
 import java.sql.Connection
 import java.sql.ResultSet
 

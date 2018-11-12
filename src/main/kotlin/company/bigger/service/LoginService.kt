@@ -2,13 +2,17 @@ package company.bigger.service
 
 import company.bigger.dto.ILogin
 import company.bigger.dto.UserLoginModelResponse
-import company.bigger.util.*
+import company.bigger.util.asResource
+import company.bigger.util.executeSql
+import company.bigger.util.getBooleanValue
+import company.bigger.util.getSHA512Hash
+import company.bigger.util.convertHexString
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.UnsupportedEncodingException
 import java.security.NoSuchAlgorithmException
-import java.util.*
+import java.util.Date
 
 private val log = KotlinLogging.logger {}
 
@@ -72,7 +76,7 @@ class LoginService {
 
                         if (!inactive) {
                             "/sql/unlockUser.sql".asResource { s2 ->
-                                s2.executeSql(mapOf(1 to user.id)) {  }
+                                s2.executeSql(mapOf(1 to user.id)) { }
                             }
                         }
                     }
@@ -82,7 +86,7 @@ class LoginService {
                     val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
                     if (days > MAX_INACTIVE_PERIOD_DAY) {
                         "/sql/lockUser.sql".asResource { s2 ->
-                            s2.executeSql(mapOf(1 to user.id)) {  }
+                            s2.executeSql(mapOf(1 to user.id)) { }
                         }
                     }
                 }
@@ -100,7 +104,7 @@ class LoginService {
             return arrayOf()
         }
         if (appPwd.isEmpty()) {
-            log.warn( "No Apps Password" )
+            log.warn("No Apps Password")
             return arrayOf()
         }
         val users = findByUsername(appUser)
@@ -154,5 +158,4 @@ class LoginService {
         }
         return !c_bpartner_ids.isEmpty()
     }
-
 }
