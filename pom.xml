@@ -263,6 +263,13 @@
             <version>5.0.3.RELEASE</version>
         </dependency>
 
+        <!-- Logging -->
+        <dependency>
+            <groupId>io.github.microutils</groupId>
+            <artifactId>kotlin-logging</artifactId>
+            <version>1.6.20</version>
+        </dependency>
+
         <!-- JWT -->
 
     </dependencies>
