@@ -2,10 +2,15 @@ package company.bigger
 
 import com.rollbar.notifier.Rollbar
 import com.rollbar.notifier.config.ConfigBuilder
+import company.bigger.util.Ini
+import kotliquery.HikariCP
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cache.annotation.EnableCaching
+import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.event.ContextRefreshedEvent
+import org.springframework.stereotype.Component
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
@@ -28,6 +33,13 @@ open class Application : WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(false)
                 .maxAge(3600)
+    }
+}
+
+@Component
+open class StartupApplicationListener(val ini: Ini) : ApplicationListener<ContextRefreshedEvent> {
+    override fun onApplicationEvent(event: ContextRefreshedEvent) {
+        HikariCP.default(ini.url, ini.username, ini.password)
     }
 }
 

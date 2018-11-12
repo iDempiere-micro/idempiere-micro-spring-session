@@ -3,10 +3,11 @@ package company.bigger.service
 import company.bigger.dto.ILogin
 import company.bigger.dto.UserLoginModelResponse
 import company.bigger.util.asResource
-import company.bigger.util.executeSql
 import company.bigger.util.getBooleanValue
 import company.bigger.util.getSHA512Hash
 import company.bigger.util.convertHexString
+import kotliquery.Session
+import kotliquery.queryOf
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -40,7 +41,7 @@ class LoginService {
     @Value("\${user.locking.max_password_age_day:365}")
     private lateinit var USER_LOCKING_MAX_PASSWORD_AGE_DAY: String
 
-    fun findByUsername(appUser: String?): List<User> {
+    fun findByUsername(session: Session, appUser: String?): List<User> {
         log.info("User=$appUser")
 
         if (appUser == null || appUser.isEmpty()) {
@@ -49,12 +50,12 @@ class LoginService {
         }
 
         return "/sql/findByUsername.sql".asResource { s ->
-            val users = s.executeSql(mapOf(1 to appUser, 2 to appUser)) {
-                User(
-                    it.getInt(1), it.getBoolean(42), it.getDate(43), it.getDate(46), it.getString(11), it.getString(41),
-                    it.getInt(2)
-                )
-            }
+            val usersQuery = queryOf(s, appUser, appUser).map { row -> User(
+                row.int(1), row.boolean(42), row.sqlDateOrNull(43), row.sqlDateOrNull(46),
+                row.stringOrNull(11), row.stringOrNull(41), row.int(2)
+            ) }.asList
+
+            val users = session.run(usersQuery)
 
             if (users.isEmpty()) {
                 log.error("UserPwdError {} {}", appUser, false)
@@ -76,7 +77,7 @@ class LoginService {
 
                         if (!inactive) {
                             "/sql/unlockUser.sql".asResource { s2 ->
-                                s2.executeSql(mapOf(1 to user.id)) { }
+                                session.run(queryOf(s2, user.id).asUpdate)
                             }
                         }
                     }
@@ -86,7 +87,7 @@ class LoginService {
                     val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
                     if (days > MAX_INACTIVE_PERIOD_DAY) {
                         "/sql/lockUser.sql".asResource { s2 ->
-                            s2.executeSql(mapOf(1 to user.id)) { }
+                            session.run(queryOf(s2, user.id).asUpdate)
                         }
                     }
                 }
@@ -96,7 +97,7 @@ class LoginService {
         }
     }
 
-    fun getUsers(appUser: String, appPwd: String): Array<User> {
+    fun getUsers(session: Session, appUser: String, appPwd: String): Array<User> {
         log.info("User=$appUser")
 
         if (appUser.isEmpty()) {
@@ -107,7 +108,7 @@ class LoginService {
             log.warn("No Apps Password")
             return arrayOf()
         }
-        val users = findByUsername(appUser)
+        val users = findByUsername(session, appUser)
         if (users.isEmpty()) {
             log.error("UserPwdError {}", appUser)
             return arrayOf()
@@ -141,20 +142,21 @@ class LoginService {
         }
     }
 
-    fun login(login: ILogin): UserLoginModelResponse {
-        val users = getUsers(login.loginName, login.password)
+    fun login(session: Session, login: ILogin): UserLoginModelResponse {
+        val users = getUsers(session, login.loginName, login.password)
         val user = users.firstOrNull { users.count() == 1 || it.clientId == login.clientId }
         if (user != null) {
-            return UserLoginModelResponse(checkUserAccess(user), null, login.loginName, user.clientId, user.id)
+            return UserLoginModelResponse(checkUserAccess(session, user), null, login.loginName, user.clientId, user.id)
         }
         return UserLoginModelResponse(loginName = login.loginName)
     }
 
-    private fun checkUserAccess(user: User): Boolean {
+    private fun checkUserAccess(session: Session, user: User): Boolean {
         val c_bpartner_ids = "/sql/checkUserAccess.sql".asResource { s ->
-            s.executeSql(mapOf(1 to user.id)) {
-                it.getInt(2)
-            }
+            val usersQuery = queryOf(s, user.id).map { row ->
+                    row.int(2) }.asList
+
+            session.run(usersQuery)
         }
         return !c_bpartner_ids.isEmpty()
     }

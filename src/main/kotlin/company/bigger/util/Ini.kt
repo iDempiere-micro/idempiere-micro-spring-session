@@ -2,6 +2,7 @@ package company.bigger.util
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
+import kotliquery.HikariCP
 
 /**
  * The original Ini class from iDempiere to collect the configuration parameters.
@@ -19,12 +20,16 @@ open class Ini {
         }
     }
 
-    init { setInstance(this) }
+    init {
+        setInstance(this)
+    }
 
-    @Value("\${session.connection}")
-    private lateinit var m_connection: String
-
-    val connection get() = m_connection
+    @Value("\${session.url}")
+    internal lateinit var url: String
+    @Value("\${session.username}")
+    internal lateinit var username: String
+    @Value("\${session.password}")
+    internal lateinit var password: String
 }
 
 /**

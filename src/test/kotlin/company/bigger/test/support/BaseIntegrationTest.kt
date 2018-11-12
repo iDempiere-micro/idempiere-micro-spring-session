@@ -40,7 +40,8 @@ open class BaseIntegrationTest : BaseTest() {
     protected var loginClient: LoginClient? = null
 
     @Before
-    fun prepare() {
+    override fun prepare() {
+        super.prepare()
         loginClient = buildClient(LoginClient::class.java)
     }
 
