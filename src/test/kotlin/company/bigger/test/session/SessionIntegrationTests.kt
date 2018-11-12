@@ -3,7 +3,6 @@ package company.bigger.test.session
 import company.bigger.test.support.BaseIntegrationTest
 import company.bigger.test.support.randomString
 import org.junit.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
