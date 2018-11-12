@@ -4,14 +4,13 @@ import com.zaxxer.hikari.HikariDataSource
 import java.sql.Connection
 import java.sql.ResultSet
 
-private fun getConnection(): Connection {
-    val ds = HikariDataSource()
-    ds.jdbcUrl = Ini.instance.connection
-    return ds.connection
-}
+val ds = HikariDataSource()
 
 fun <T : Any> String.executeSql(params: Map<Int, Any> = mapOf(), factory: (ResultSet) -> T): List<T> {
-    val cnn: Connection = getConnection()
+    if (ds.jdbcUrl != Ini.instance.connection) {
+        ds.jdbcUrl = Ini.instance.connection
+    }
+    val cnn = ds.connection
     val statement = cnn.prepareStatement(this)
     for (param in params) {
         statement.setObject(param.key, param.value)
