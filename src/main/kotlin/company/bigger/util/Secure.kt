@@ -1,10 +1,9 @@
-package org.idempiere.common.util
+package company.bigger.util
 
 import mu.KotlinLogging
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import java.util.logging.Level
 
 private val log = KotlinLogging.logger {}
 

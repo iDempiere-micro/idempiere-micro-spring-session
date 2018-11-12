@@ -2,8 +2,8 @@ package company.bigger.service
 
 import company.bigger.dto.ILogin
 import company.bigger.dto.UserLoginModelResponse
+import company.bigger.util.*
 import mu.KotlinLogging
-import org.idempiere.common.util.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.UnsupportedEncodingException
@@ -147,8 +147,12 @@ class LoginService {
     }
 
     private fun checkUserAccess(user: User): Boolean {
-        // TODO: implement
-        return true
+        val c_bpartner_ids = "/sql/checkUserAccess.sql".asResource { s ->
+            s.executeSql(mapOf(1 to user.id)) {
+                it.getInt(2)
+            }
+        }
+        return !c_bpartner_ids.isEmpty()
     }
 
 }

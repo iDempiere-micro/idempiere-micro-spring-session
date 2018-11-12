@@ -1,4 +1,4 @@
-package org.idempiere.common.util
+package company.bigger.util
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
@@ -11,6 +11,16 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 open class Ini() {
+    companion object {
+        private var _instance: Ini? = null
+        internal val instance get() = _instance!!
+        private fun setInstance(i: Ini) {
+            _instance = i
+        }
+    }
+
+    init { setInstance(this) }
+
     @Value("\${connection}")
     private lateinit var m_connection: String
 

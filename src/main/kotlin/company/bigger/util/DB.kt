@@ -1,17 +1,18 @@
-package org.idempiere.common.util
+package company.bigger.util
 
+import com.zaxxer.hikari.HikariDataSource
+import org.springframework.stereotype.Component
 import java.sql.Connection
-import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.Statement
 
-internal fun <T> String.asResource(work: (String) -> T): T {
-    val content = Ini::class.java.getResource(this).readText()
-    return work(content)
+private fun getConnection(): Connection {
+    val ds = HikariDataSource()
+    ds.jdbcUrl = Ini.instance.connection
+    return ds.connection
 }
 
-internal fun <T : Any> String.executeSql(params: Map<Int, Any> = mapOf(), factory: (ResultSet) -> T): List<T> {
-    val cnn: Connection = DB.getConnectionRO()
+fun <T : Any> String.executeSql(params: Map<Int, Any> = mapOf(), factory: (ResultSet) -> T): List<T> {
+    val cnn: Connection = getConnection()
     val statement = cnn.prepareStatement(this)
     for (param in params) {
         statement.setObject(param.key, param.value)
