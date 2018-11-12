@@ -2,7 +2,6 @@ package company.bigger.util
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
-import kotliquery.HikariCP
 
 /**
  * The original Ini class from iDempiere to collect the configuration parameters.
