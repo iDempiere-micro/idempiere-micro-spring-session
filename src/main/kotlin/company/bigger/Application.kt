@@ -42,6 +42,10 @@ open class Application : WebMvcConfigurer {
 @Component
 open class StartupApplicationListener(val ini: Ini) : ApplicationListener<ContextRefreshedEvent> {
     override fun onApplicationEvent(event: ContextRefreshedEvent) {
+
+        /**
+         * Connect HikariCP
+         */
         HikariCP.default(ini.url, ini.username, ini.password)
     }
 }

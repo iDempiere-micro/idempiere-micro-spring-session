@@ -17,6 +17,9 @@ class SessionController(
     private val userService: UserService
 ) {
 
+    /**
+     * Login and return token if the username and password are valid
+     */
     @GetMapping()
     @RequestMapping(value = ["/session/{username}/login/{password}"])
     fun login(@PathVariable username: String, @PathVariable password: String): UserLoginModelResponse? {
