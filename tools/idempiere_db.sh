@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ ! -f idempiere-docker-pgsql-5.1.0.latest.tar.gz ]; then
     wget https://sourceforge.net/projects/idempiereksys/files/idempiere-docker-image/idempiere-docker-pgsql-5.1.0.latest.tar.gz
 fi
