@@ -78,8 +78,7 @@ class LoginService {
         }
     }
 
-
-        private fun lockOrUnlockUsers(session: Session, users: List<User>) {
+    private fun lockOrUnlockUsers(session: Session, users: List<User>) {
         for (user in users) { lockOrUnlockUser(session, user) }
     }
 
