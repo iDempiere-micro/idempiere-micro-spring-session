@@ -1,0 +1,122 @@
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # we still want to run on JDK 8
+      - image: circleci/openjdk:8-jdk-node-browsers-legacy
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m -DforkCount=0
+      SESSION_URL: jdbc:postgresql://localhost:5433/idempiere
+      SESSION_USERNAME: adempiere
+      SESSION_PASSWORD: adempiere
+      CC_TEST_REPORTER_ID: 9d7af87b8e3036e7987e770d33b70a03ef959885448890a97e36b3036d8d96d9
+
+    steps:
+      - checkout
+
+      - run:
+          name: install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: install and run iDempiere 5.1 Docker PostgreSQL
+          command: ./tools/idempiere_db.sh
+            
+      - run:
+          name: Wait for db
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # run tests!
+      - run: 
+          name: Compile the code and package it
+          command: |
+            if [ "$CIRCLE_BRANCH" == "master" ];
+            then
+              mvn compile
+            else
+              mvn package
+            fi
+
+      # get the code climate test reporter    
+      - run:
+          name: Run the code climate test reporter, Generate the DB and site if on master branch
+          command: |
+            if [ "$CIRCLE_BRANCH" == "master" ];
+            then
+              curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+              chmod +x ./cc-test-reporter
+              ./cc-test-reporter before-build
+              mvn site
+              mkdir -p src/main/java/
+              cp -R src/main/kotlin/* src/main/java/
+              ./cc-test-reporter format-coverage target/site/cobertura/coverage.xml  -t cobertura
+              ./cc-test-reporter upload-coverage -r 9d7af87b8e3036e7987e770d33b70a03ef959885448890a97e36b3036d8d96d9
+              rm -rf src/main/java/
+
+            fi
+      - run: 
+          name: Integration test
+          command: ./tools/integration_test.sh
+
+  deploy:
+    docker:
+      - image: buildpack-deps:trusty
+    steps:
+      - checkout
+      - run:
+          name: Deploy Develop to Dokku
+          command:
+            ssh-keyscan staging-aws.hsharp.software >> ~/.ssh/known_hosts && git push dokku@staging-aws.hsharp.software:idempiere-micro-spring develop
+  deploy_master:
+    docker:
+      - image: buildpack-deps:trusty
+    steps:
+      - checkout
+      - run:
+          name: Deploy Master to Dokku
+          command:
+            echo "Currently not supported"
+            # ssh-keyscan prod.hsharp.software >> ~/.ssh/known_hosts && git push dokku@prod.hsharp.software:idempiere-micro-spring master
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: 
+                - develop
+      - deploy_master:
+          requires:
+            - build
+          filters:
+            branches:
+              only: 
+                - master
