@@ -1,11 +1,11 @@
 package company.bigger.dto
 
+/**
+ * A data class to send the login parameters.
+ * See [ILogin] for limitations.
+ */
 data class UserLoginModel(
     override val loginName: String,
     override val password: String,
-    override val clientId: Int? = null,
-    override val roleId: Int? = null,
-    override val orgId: Int? = null,
-    override val warehouseId: Int? = null,
-    override val language: String? = "en-US"
+    override val clientId: Int? = null
 ) : ILogin
