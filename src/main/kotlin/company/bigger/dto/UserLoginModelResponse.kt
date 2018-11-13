@@ -1,29 +1,28 @@
 package company.bigger.dto
 
+/**
+ * The response we send to the calling site as a result of an attempted login.
+ * See [ILoginResponse] for the details and limitations
+ */
 data class UserLoginModelResponse(
+    /**
+     * Was the request authenticated?
+      */
     override val logged: Boolean = false,
+    /**
+     * Then token to be then sent with the requests
+     */
     override val token: String? = null,
+    /**
+     * The loginName that was used to send the login request
+     */
     override val loginName: String,
-    override val clientId: Int = -1,
-    override val userId: Int = -1
-) : ILoginResponse {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as UserLoginModelResponse
-
-        if (logged != other.logged) return false
-        if (token != other.token) return false
-        if (loginName != other.loginName) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = logged.hashCode()
-        result = 31 * result + (token?.hashCode() ?: 0)
-        result = 31 * result + (loginName.hashCode())
-        return result
-    }
-}
+    /**
+     * The clientId of the authenticated user or null
+     */
+    override val clientId: Int? = null,
+    /**
+     * The authenticated user Id or null
+     */
+    override val userId: Int? = null
+) : ILoginResponse

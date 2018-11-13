@@ -14,6 +14,10 @@ import org.springframework.test.context.ContextConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(classes = [company.bigger.Application::class])
 abstract class BaseTest {
+    companion object {
+        private var setUpIsDone = false
+    }
+
     @Autowired
     protected lateinit var ini: Ini
 
@@ -22,6 +26,9 @@ abstract class BaseTest {
 
     @Before
     open fun prepare() {
-        HikariCP.default(ini.url, ini.username, ini.password)
+        if (!setUpIsDone) {
+            HikariCP.default(ini.url, ini.username, ini.password)
+            setUpIsDone = true
+        }
     }
 }
