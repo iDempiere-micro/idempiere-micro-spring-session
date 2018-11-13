@@ -18,7 +18,6 @@ abstract class BaseTest {
         private var setUpIsDone = false
     }
 
-
     @Autowired
     protected lateinit var ini: Ini
 
