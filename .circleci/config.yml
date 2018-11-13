@@ -20,6 +20,7 @@ jobs:
       CC_TEST_REPORTER_ID: 9d7af87b8e3036e7987e770d33b70a03ef959885448890a97e36b3036d8d96d9
 
     steps:
+      - setup_remote_docker      
       - checkout
 
       - run:
