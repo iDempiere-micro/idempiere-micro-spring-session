@@ -9,9 +9,12 @@ jobs:
       # we still want to run on JDK 8
       - image: circleci/openjdk:8-jdk-node-browsers-legacy
 
-      - image: idempiere/idempiere-docker-pgsql:5.1.0.latest
+      # we still want to support 9.6, the list is at https://circleci.com/docs/2.0/circleci-images/#postgresql
+      - image: circleci/postgres:9.6-alpine-postgis-ram
         environment:
-          PASS: postgres
+          POSTGRES_USER: adempiere
+          POSTGRES_PASSWORD: adempiere
+          POSTGRES_DB: idempiere
 
     working_directory: ~/repo
 
@@ -50,6 +53,11 @@ jobs:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # run the migrations
+      - run:
+          name: DB Migrations
+          command: rm -rf ./src/main/resources/db/migration/V1__iDempiere_5.1.0.sql; ( cd ./src/main/resources/db/migration/; gunzip -k V1__iDempiere_5.1.0.sql.gz ); mvn flyway:migrate
 
       # run tests!
       - run: 
