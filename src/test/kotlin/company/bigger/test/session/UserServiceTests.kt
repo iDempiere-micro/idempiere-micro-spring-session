@@ -18,4 +18,10 @@ class UserServiceTests : BaseTest() {
         val result = userService.login(UserLoginModel("GardenUser", randomString(20)))
         assertNull(result?.token)
     }
+
+    @Test
+    fun `Joe Sales cannot login as he does not have a password (service)`() {
+        val result = userService.login(UserLoginModel("Joe Sales", ""))
+        assertNull(result?.token)
+    }
 }
