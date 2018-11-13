@@ -41,6 +41,39 @@ class LoginService {
     @Value("\${user.locking.max_password_age_day:365}")
     private lateinit var USER_LOCKING_MAX_PASSWORD_AGE_DAY: String
 
+    private fun lockOrUnlockUsers(session: Session, users: List<User>) {
+        val MAX_ACCOUNT_LOCK_MINUTES = USER_LOCKING_MAX_ACCOUNT_LOCK_MINUTES.toInt()
+        val MAX_INACTIVE_PERIOD_DAY = USER_LOCKING_MAX_INACTIVE_PERIOD_DAY.toInt()
+        val now = Date().time
+        for (user in users) {
+            if (MAX_ACCOUNT_LOCK_MINUTES > 0 && user.isLocked && user.dateAccountLocked != null) {
+                val minutes = (now - user.dateAccountLocked.time) / (1000 * 60)
+                if (minutes > MAX_ACCOUNT_LOCK_MINUTES) {
+                    val inactive =
+                            if (MAX_INACTIVE_PERIOD_DAY > 0 && user.dateLastLogin != null) {
+                                val days = (now - user.dateLastLogin.getTime()) / (1000 * 60 * 60 * 24)
+                                days > MAX_INACTIVE_PERIOD_DAY
+                            } else { false }
+
+                    if (!inactive) {
+                        "/sql/unlockUser.sql".asResource { s2 ->
+                            session.run(queryOf(s2, user.id).asUpdate)
+                        }
+                    }
+                }
+            }
+
+            if (MAX_INACTIVE_PERIOD_DAY > 0 && !user.isLocked && user.dateLastLogin != null) {
+                val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
+                if (days > MAX_INACTIVE_PERIOD_DAY) {
+                    "/sql/lockUser.sql".asResource { s2 ->
+                        session.run(queryOf(s2, user.id).asUpdate)
+                    }
+                }
+            }
+        }
+    }
+
     fun findByUsername(session: Session, appUser: String?): List<User> {
         log.info("User=$appUser")
 
@@ -61,37 +94,7 @@ class LoginService {
                 log.error("UserPwdError {} {}", appUser, false)
                 listOf<Int>()
             }
-
-            val MAX_ACCOUNT_LOCK_MINUTES = USER_LOCKING_MAX_ACCOUNT_LOCK_MINUTES.toInt()
-            val MAX_INACTIVE_PERIOD_DAY = USER_LOCKING_MAX_INACTIVE_PERIOD_DAY.toInt()
-            val now = Date().time
-            for (user in users) {
-                if (MAX_ACCOUNT_LOCK_MINUTES > 0 && user.isLocked && user.dateAccountLocked != null) {
-                    val minutes = (now - user.dateAccountLocked.time) / (1000 * 60)
-                    if (minutes > MAX_ACCOUNT_LOCK_MINUTES) {
-                        val inactive =
-                            if (MAX_INACTIVE_PERIOD_DAY > 0 && user.dateLastLogin != null) {
-                                val days = (now - user.dateLastLogin.getTime()) / (1000 * 60 * 60 * 24)
-                                days > MAX_INACTIVE_PERIOD_DAY
-                            } else { false }
-
-                        if (!inactive) {
-                            "/sql/unlockUser.sql".asResource { s2 ->
-                                session.run(queryOf(s2, user.id).asUpdate)
-                            }
-                        }
-                    }
-                }
-
-                if (MAX_INACTIVE_PERIOD_DAY > 0 && !user.isLocked && user.dateLastLogin != null) {
-                    val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
-                    if (days > MAX_INACTIVE_PERIOD_DAY) {
-                        "/sql/lockUser.sql".asResource { s2 ->
-                            session.run(queryOf(s2, user.id).asUpdate)
-                        }
-                    }
-                }
-            }
+            lockOrUnlockUsers(session, users)
 
             users
         }
