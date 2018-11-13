@@ -13,18 +13,21 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.UnsupportedEncodingException
 import java.security.NoSuchAlgorithmException
+import java.sql.Timestamp
 import java.util.Date
 
 private val log = KotlinLogging.logger {}
 
 data class User(
-    val id: kotlin.Int, // 1
-    val isLocked: kotlin.Boolean, // 42
-    val dateAccountLocked: java.util.Date?, // 43
-    val dateLastLogin: java.util.Date?, // 46
-    val password: kotlin.String?, // 11
-    val salt: kotlin.String?, // 41
-    val clientId: Int //
+    val id: Int, // 1
+    val isLocked: Boolean, // 42
+    val dateAccountLocked: Timestamp?, // 43
+    val dateLastLogin: Timestamp?, // 46
+    val password: String?, // 11
+    val salt: String?, // 41
+    val clientId: Int, // 2
+    val failedLoginCount: Int?, // 44
+    val userName: String // 9
 )
 
 @Service
@@ -40,6 +43,9 @@ class LoginService {
 
     @Value("\${user.locking.max_password_age_day:365}")
     private lateinit var USER_LOCKING_MAX_PASSWORD_AGE_DAY: String
+
+    @Value("\${user.locking.max_login_attempt:10}")
+    private lateinit var USER_LOCKING_MAX_LOGIN_ATTEMPT: String
 
     private fun lockOrUnlockUsers(session: Session, users: List<User>) {
         val MAX_ACCOUNT_LOCK_MINUTES = USER_LOCKING_MAX_ACCOUNT_LOCK_MINUTES.toInt()
@@ -84,8 +90,9 @@ class LoginService {
 
         return "/sql/findByUsername.sql".asResource { s ->
             val usersQuery = queryOf(s, appUser, appUser).map { row -> User(
-                row.int(1), row.boolean(42), row.sqlDateOrNull(43), row.sqlDateOrNull(46),
-                row.stringOrNull(11), row.stringOrNull(41), row.int(2)
+                row.int(1), row.boolean(42), row.sqlTimestampOrNull(43), row.sqlTimestampOrNull(46),
+                row.stringOrNull(11), row.stringOrNull(41), row.int(2), row.intOrNull(44),
+                row.string(9)
             ) }.asList
 
             val users = session.run(usersQuery)
@@ -127,6 +134,31 @@ class LoginService {
                     it.password != null && it.password == appPwd
             } && !it.isLocked
         }
+
+        val failedUsers = users - authenticatedUsers
+        failedUsers.forEach {
+            if (!it.isLocked) {
+                val count = (it.failedLoginCount ?: 0) + 1
+                val MAX_LOGIN_ATTEMPT = USER_LOCKING_MAX_LOGIN_ATTEMPT.toInt()
+                val reachMaxAttempt = if (MAX_LOGIN_ATTEMPT in 1..count) {
+                    log.warn { "Reached the maximum number of setSecurityContext attempts, user account (${it.userName}) is locked" }
+                    true
+                } else if (MAX_LOGIN_ATTEMPT > 0) {
+                    log.warn { "Invalid User ID or Password (${it.userName}) (Login Attempts: $count / $MAX_LOGIN_ATTEMPT" }
+                    if (count == MAX_LOGIN_ATTEMPT - 1) {
+                        false
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+                "/sql/updateUserWithFailedCount.sql".asResource { s ->
+                    session.run(queryOf(s, if (reachMaxAttempt)"Y" else "N", count, if (reachMaxAttempt) Timestamp(Date().time) else null, it.id).asUpdate)
+                }
+            }
+        }
+
         return authenticatedUsers.toTypedArray()
     }
 
@@ -155,12 +187,12 @@ class LoginService {
     }
 
     private fun checkUserAccess(session: Session, user: User): Boolean {
-        val c_bpartner_ids = "/sql/checkUserAccess.sql".asResource { s ->
+        val businessPartnersIds: List<Int?> = "/sql/checkUserAccess.sql".asResource { s ->
             val usersQuery = queryOf(s, user.id).map { row ->
-                    row.int(2) }.asList
+                    row.intOrNull(2) }.asList
 
             session.run(usersQuery)
         }
-        return !c_bpartner_ids.isEmpty()
+        return !businessPartnersIds.none { it != null }
     }
 }
