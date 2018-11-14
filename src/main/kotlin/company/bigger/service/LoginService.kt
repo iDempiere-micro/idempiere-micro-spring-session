@@ -139,27 +139,29 @@ class LoginService {
         return Pair(authenticatedUsers, failedUsers)
     }
 
+    private fun lockUnauthenticatedUser(session: Session, failedUser: User) {
+        val count = (failedUser.failedLoginCount ?: 0) + 1
+        val maxLoginAttempt = USER_LOCKING_MAX_LOGIN_ATTEMPT.toInt()
+        val reachMaxAttempt = when {
+            maxLoginAttempt in 1..count -> {
+                log.warn { "Reached the maximum number of setSecurityContext attempts, user account (${failedUser.userName}) is locked" }
+                true
+            }
+            maxLoginAttempt > 0 -> {
+                log.warn { "Invalid User ID or Password (${failedUser.userName}) (Login Attempts: $count / $maxLoginAttempt" }
+                false
+            }
+            else -> false
+        }
+        "/sql/updateUserWithFailedCount.sql".asResource { s ->
+            session.run(queryOf(s, if (reachMaxAttempt)"Y" else "N", count, if (reachMaxAttempt) Timestamp(Date().time) else null, failedUser.id).asUpdate)
+        }
+    }
+
     private fun lockUnauthenticatedUsers(session: Session, failedUsers: List<User>) {
         failedUsers.forEach {
             if (!it.isLocked) {
-                val count = (it.failedLoginCount ?: 0) + 1
-                val MAX_LOGIN_ATTEMPT = USER_LOCKING_MAX_LOGIN_ATTEMPT.toInt()
-                val reachMaxAttempt = if (MAX_LOGIN_ATTEMPT in 1..count) {
-                    log.warn { "Reached the maximum number of setSecurityContext attempts, user account (${it.userName}) is locked" }
-                    true
-                } else if (MAX_LOGIN_ATTEMPT > 0) {
-                    log.warn { "Invalid User ID or Password (${it.userName}) (Login Attempts: $count / $MAX_LOGIN_ATTEMPT" }
-                    if (count == MAX_LOGIN_ATTEMPT - 1) {
-                        false
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-                "/sql/updateUserWithFailedCount.sql".asResource { s ->
-                    session.run(queryOf(s, if (reachMaxAttempt)"Y" else "N", count, if (reachMaxAttempt) Timestamp(Date().time) else null, it.id).asUpdate)
-                }
+                lockUnauthenticatedUser(session, it)
             }
         }
     }

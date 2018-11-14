@@ -6,10 +6,16 @@ import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertNotNull
 
+/**
+ * Testing the session controller (direct call).
+ */
 class SessionControllerTests : BaseTest() {
     @Autowired
     private lateinit var sessionController: SessionController
 
+    /**
+     * GardenUser can login (controller)
+     */
     @Test
     fun `GardenUser can login (controller)`() {
         val result = sessionController.login("GardenUser", "GardenUser")
