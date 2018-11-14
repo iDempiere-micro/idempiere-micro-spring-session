@@ -1,5 +1,5 @@
 # idempiere-micro-spring-session
-iDempiere Session Microservice in Spring Kotlin
+iDempiere Session Microservice using Spring Boot written in Kotlin
 
 [![](https://jitpack.io/v/iDempiere-micro/idempiere-micro-spring-session.svg)](https://jitpack.io/#iDempiere-micro/idempiere-micro-spring-session)
 [![CircleCI](https://circleci.com/gh/iDempiere-micro/idempiere-micro-spring-session/tree/master.svg?style=svg)](https://circleci.com/gh/iDempiere-micro/idempiere-micro-spring-session/tree/master)
