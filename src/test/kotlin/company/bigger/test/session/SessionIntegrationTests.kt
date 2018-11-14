@@ -11,10 +11,6 @@ import kotlin.test.assertTrue
  * Testing the session controller throught the REST interface.
  */
 class SessionIntegrationTests : BaseIntegrationTest() {
-    @Test
-    fun contextLoads() {
-    }
-
     /**
      * GardenUser can login
      */
