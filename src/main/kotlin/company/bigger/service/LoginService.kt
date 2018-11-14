@@ -6,6 +6,9 @@ import company.bigger.util.asResource
 import company.bigger.util.getBooleanValue
 import company.bigger.util.getSHA512Hash
 import company.bigger.util.convertHexString
+import company.bigger.util.User
+import company.bigger.util.unlockUser
+import company.bigger.util.lockUnauthenticatedUser
 import kotliquery.Session
 import kotliquery.queryOf
 import mu.KotlinLogging
@@ -13,22 +16,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.UnsupportedEncodingException
 import java.security.NoSuchAlgorithmException
-import java.sql.Timestamp
 import java.util.Date
 
 private val log = KotlinLogging.logger {}
-
-private data class User(
-    val id: Int, // 1
-    val isLocked: Boolean, // 42
-    val dateAccountLocked: Timestamp?, // 43
-    val dateLastLogin: Timestamp?, // 46
-    val password: String?, // 11
-    val salt: String?, // 41
-    val clientId: Int, // 2
-    val failedLoginCount: Int?, // 44
-    val userName: String // 9
-)
 
 /**
  * The login service to login the user.
@@ -66,32 +56,13 @@ class LoginService {
         }
     }
 
-    private fun unlockUser(session: Session, user: User) {
+    private fun lockOrUnlockUsers(session: Session, users: List<User>) {
         val MAX_ACCOUNT_LOCK_MINUTES = USER_LOCKING_MAX_ACCOUNT_LOCK_MINUTES.toInt()
         val MAX_INACTIVE_PERIOD_DAY = USER_LOCKING_MAX_INACTIVE_PERIOD_DAY.toInt()
-        val now = Date().time
-        if (MAX_ACCOUNT_LOCK_MINUTES > 0 && user.isLocked && user.dateAccountLocked != null) {
-            val minutes = (now - user.dateAccountLocked.time) / (1000 * 60)
-            if (minutes > MAX_ACCOUNT_LOCK_MINUTES) {
-                val inactive =
-                        if (MAX_INACTIVE_PERIOD_DAY > 0 && user.dateLastLogin != null) {
-                            val days = (now - user.dateLastLogin.getTime()) / (1000 * 60 * 60 * 24)
-                            days > MAX_INACTIVE_PERIOD_DAY
-                        } else { false }
 
-                if (!inactive) {
-                    "/sql/unlockUser.sql".asResource { s2 ->
-                        session.run(queryOf(s2, user.id).asUpdate)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun lockOrUnlockUsers(session: Session, users: List<User>) {
         for (user in users) {
             lockUser(session, user)
-            unlockUser(session, user)
+            unlockUser(session, user, MAX_ACCOUNT_LOCK_MINUTES, MAX_INACTIVE_PERIOD_DAY)
         }
     }
 
@@ -139,29 +110,12 @@ class LoginService {
         return Pair(authenticatedUsers, failedUsers)
     }
 
-    private fun lockUnauthenticatedUser(session: Session, failedUser: User) {
-        val count = (failedUser.failedLoginCount ?: 0) + 1
-        val maxLoginAttempt = USER_LOCKING_MAX_LOGIN_ATTEMPT.toInt()
-        val reachMaxAttempt = when {
-            maxLoginAttempt in 1..count -> {
-                log.warn { "Reached the maximum number of setSecurityContext attempts, user account (${failedUser.userName}) is locked" }
-                true
-            }
-            maxLoginAttempt > 0 -> {
-                log.warn { "Invalid User ID or Password (${failedUser.userName}) (Login Attempts: $count / $maxLoginAttempt" }
-                false
-            }
-            else -> false
-        }
-        "/sql/updateUserWithFailedCount.sql".asResource { s ->
-            session.run(queryOf(s, if (reachMaxAttempt)"Y" else "N", count, if (reachMaxAttempt) Timestamp(Date().time) else null, failedUser.id).asUpdate)
-        }
-    }
-
     private fun lockUnauthenticatedUsers(session: Session, failedUsers: List<User>) {
+        val maxLoginAttempt = USER_LOCKING_MAX_LOGIN_ATTEMPT.toInt()
+
         failedUsers.forEach {
             if (!it.isLocked) {
-                lockUnauthenticatedUser(session, it)
+                lockUnauthenticatedUser(session, it, maxLoginAttempt)
             }
         }
     }
