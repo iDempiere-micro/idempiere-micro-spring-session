@@ -14,6 +14,9 @@ import org.springframework.core.env.Environment
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPathProvider
 
+/**
+ * Base integration test, runs with the Feign client
+ */
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 open class BaseIntegrationTest : BaseTest() {
@@ -37,14 +40,20 @@ open class BaseIntegrationTest : BaseTest() {
         }
     }
 
-    protected var loginClient: LoginClient? = null
+    internal var loginClient: LoginClient? = null
 
+    /**
+     * Build the session client before each test
+     */
     @Before
     override fun prepare() {
         super.prepare()
         loginClient = buildClient(LoginClient::class.java)
     }
 
+    /**
+     * Dummy test to make sure the test framework works
+     */
     @Test
     fun contextLoadsBase() {
     }

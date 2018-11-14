@@ -7,11 +7,17 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * Testing the session controller throught the REST interface.
+ */
 class SessionIntegrationTests : BaseIntegrationTest() {
     @Test
     fun contextLoads() {
     }
 
+    /**
+     * GardenUser can login
+     */
     @Test
     fun `GardenUser can login`() {
         val gardenUserLogin = loginClient?.login("GardenUser", "GardenUser")
@@ -21,6 +27,9 @@ class SessionIntegrationTests : BaseIntegrationTest() {
         assertTrue { gardenUserLogin.logged }
     }
 
+    /**
+     * Random user can not login
+     */
     @Test
     fun `Random user can not login`() {
         val gardenUserLogin = loginClient?.login(randomString(10), randomString(10))

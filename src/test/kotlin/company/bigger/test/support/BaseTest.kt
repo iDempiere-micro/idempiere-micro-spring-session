@@ -11,7 +11,7 @@ import org.junit.Before
 import org.springframework.test.context.ContextConfiguration
 
 /**
- * The base class for the Unit tests
+ * Base Unit test running without the web environment
  */
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -27,6 +27,9 @@ abstract class BaseTest {
     @Autowired
     protected lateinit var userService: UserService
 
+    /**
+     * At the beginning of the tests setup the Hikari Connection Pool to connect to the Ini-provided PgSQL
+     */
     @Before
     open fun prepare() {
         if (!setUpIsDone) {

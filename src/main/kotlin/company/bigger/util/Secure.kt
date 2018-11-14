@@ -19,18 +19,12 @@ internal fun convertHexString(hexString: String?): ByteArray? {
     val retValue = ByteArray(size)
     val inString = hexString.toLowerCase()
 
-    try {
-        for (i in 0 until size) {
-            val index = i * 2
-            val ii = Integer.parseInt(inString.substring(index, index + 2), 16)
-            retValue[i] = ii.toByte()
-        }
-        return retValue
-    } catch (e: Exception) {
-        log.trace(hexString + " - " + e.localizedMessage)
+    for (i in 0 until size) {
+        val index = i * 2
+        val ii = Integer.parseInt(inString.substring(index, index + 2), 16)
+        retValue[i] = ii.toByte()
     }
-
-    return null
+    return retValue
 }
 
 /**
