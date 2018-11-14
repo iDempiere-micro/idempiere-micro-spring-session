@@ -5,21 +5,19 @@ import feign.Feign
 import feign.gson.GsonDecoder
 import feign.gson.GsonEncoder
 import org.junit.Before
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.core.env.Environment
 import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPathProvider
 
 /**
  * Base integration test, runs with the Feign client
  */
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-open class BaseIntegrationTest : BaseTest() {
+abstract class BaseIntegrationTest : BaseTest() {
     companion object {
         const val USER = "GardenUser"
     }
@@ -49,26 +47,5 @@ open class BaseIntegrationTest : BaseTest() {
     override fun prepare() {
         super.prepare()
         loginClient = buildClient(LoginClient::class.java)
-    }
-
-    /**
-     * Dummy test to make sure the test framework works
-     */
-    @Test
-    fun contextLoadsBase() {
-    }
-
-    protected fun getGardenUserToken(): String {
-        val gardenUserLogin = loginClient?.login(USER, USER)
-        gardenUserLogin!!
-        val token = gardenUserLogin.token
-        token!!
-        return token
-    }
-
-    class DummyDispatcherServletPathProvider : DispatcherServletPathProvider {
-        override fun getServletPath(): String {
-            return ""
-        }
     }
 }
