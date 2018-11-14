@@ -10,6 +10,9 @@ import kotliquery.HikariCP
 import org.junit.Before
 import org.springframework.test.context.ContextConfiguration
 
+/**
+ * The base class for the Unit tests
+ */
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(classes = [company.bigger.Application::class])

@@ -24,6 +24,8 @@ jobs:
       SESSION_URL: jdbc:postgresql://localhost:5432/idempiere
       SESSION_USERNAME: adempiere
       SESSION_PASSWORD: adempiere
+      JWT_SECRET: Em3u7dCZ2QSvSGSGSRFUTfrwgu3WjfU2rHZxSjNSqU5x89C3jXPL6WLMW7dTE6rd9NRgWAwUWHkj8ZLfbCNU8uVfv9kuBmWCYPkk776A5jQ2LeJ76bZbdhXN
+      JWT_ISSUER: Kotlin_Spring      
       CC_TEST_REPORTER_ID: 9d7af87b8e3036e7987e770d33b70a03ef959885448890a97e36b3036d8d96d9
 
     steps:
