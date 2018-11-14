@@ -9,6 +9,7 @@ import company.bigger.util.convertHexString
 import company.bigger.util.User
 import company.bigger.util.unlockUser
 import company.bigger.util.lockUnauthenticatedUser
+import company.bigger.util.getNumberOfDays
 import kotliquery.Session
 import kotliquery.queryOf
 import mu.KotlinLogging
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.UnsupportedEncodingException
 import java.security.NoSuchAlgorithmException
-import java.util.Date
 
 private val log = KotlinLogging.logger {}
 
@@ -44,10 +44,9 @@ class LoginService {
 
     private fun lockUser(session: Session, user: User) {
         val MAX_INACTIVE_PERIOD_DAY = USER_LOCKING_MAX_INACTIVE_PERIOD_DAY.toInt()
-        val now = Date().time
 
         if (MAX_INACTIVE_PERIOD_DAY > 0 && !user.isLocked && user.dateLastLogin != null) {
-            val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
+            val days = getNumberOfDays(user.dateLastLogin)
             if (days > MAX_INACTIVE_PERIOD_DAY) {
                 "/sql/lockUser.sql".asResource { s2 ->
                     session.run(queryOf(s2, user.id).asUpdate)

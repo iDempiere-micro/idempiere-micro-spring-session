@@ -20,6 +20,11 @@ internal data class User(
     val userName: String // 9
 )
 
+internal fun getNumberOfDays(date: Timestamp): Long {
+    val now = Date().time
+    return (now - date.time) / (1000 * 60 * 60 * 24)
+}
+
 internal fun unlockUser(session: Session, user: User, MAX_ACCOUNT_LOCK_MINUTES: Int, MAX_INACTIVE_PERIOD_DAY: Int) {
     val now = Date().time
     if (MAX_ACCOUNT_LOCK_MINUTES == 0 || !user.isLocked || user.dateAccountLocked == null)
@@ -30,7 +35,7 @@ internal fun unlockUser(session: Session, user: User, MAX_ACCOUNT_LOCK_MINUTES: 
 
     val inactive =
         if (MAX_INACTIVE_PERIOD_DAY > 0 && user.dateLastLogin != null) {
-            val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
+            val days = getNumberOfDays(user.dateLastLogin)
             days > MAX_INACTIVE_PERIOD_DAY
         } else { false }
 
