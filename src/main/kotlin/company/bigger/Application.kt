@@ -26,8 +26,8 @@ open class Application : WebMvcConfigurer {
     /**
      * Unlimited CORS allowed
      */
-    override fun addCorsMappings(registry: CorsRegistry?) {
-        registry!!.addMapping("*")
+    override fun addCorsMappings(registry: CorsRegistry) {
+        registry.addMapping("*")
                 .allowedOrigins("*")
                 .allowedMethods("*")
                 .allowedHeaders("*")
