@@ -20,7 +20,6 @@ internal data class User(
     val userName: String // 9
 )
 
-
 internal fun unlockUser(session: Session, user: User, MAX_ACCOUNT_LOCK_MINUTES: Int, MAX_INACTIVE_PERIOD_DAY: Int) {
     val now = Date().time
     if (MAX_ACCOUNT_LOCK_MINUTES > 0 && user.isLocked && user.dateAccountLocked != null) {
