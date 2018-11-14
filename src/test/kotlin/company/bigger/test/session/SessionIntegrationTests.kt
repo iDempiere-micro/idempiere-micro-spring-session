@@ -23,8 +23,7 @@ class SessionIntegrationTests : BaseIntegrationTest() {
         val gardenUserLogin = loginClient?.login("GardenUser", "GardenUser")
         println("$gardenUserLogin")
         assertNotNull(gardenUserLogin)
-        gardenUserLogin!!
-        assertTrue { gardenUserLogin.logged }
+        assertTrue { gardenUserLogin?.logged == true }
     }
 
     /**
@@ -35,7 +34,6 @@ class SessionIntegrationTests : BaseIntegrationTest() {
         val gardenUserLogin = loginClient?.login(randomString(10), randomString(10))
         println("$gardenUserLogin")
         assertNotNull(gardenUserLogin)
-        gardenUserLogin!!
-        assertFalse { gardenUserLogin.logged }
+        assertFalse { gardenUserLogin?.logged == true }
     }
 }
