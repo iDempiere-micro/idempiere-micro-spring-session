@@ -13,7 +13,7 @@ private val log = KotlinLogging.logger {}
  * @param hexString hex string
  * @return byte array
  */
-fun convertHexString(hexString: String?): ByteArray? {
+internal fun convertHexString(hexString: String?): ByteArray? {
     if (hexString == null || hexString.isEmpty()) return null
     val size = hexString.length / 2
     val retValue = ByteArray(size)
@@ -40,7 +40,7 @@ fun convertHexString(hexString: String?): ByteArray? {
  * @param bytes bytes
  * @return HexString
  */
-fun convertToHexString(bytes: ByteArray): String {
+internal fun convertToHexString(bytes: ByteArray): String {
     // 	see also Util.toHex
     val size = bytes.size
     val buffer = StringBuilder(size * 2)
@@ -67,7 +67,7 @@ fun convertToHexString(bytes: ByteArray): String {
  * @throws UnsupportedEncodingException
  */
 @Throws(NoSuchAlgorithmException::class, UnsupportedEncodingException::class)
-fun getSHA512Hash(iterations: Int, value: String, salt: ByteArray?): String {
+internal fun getSHA512Hash(iterations: Int, value: String, salt: ByteArray?): String {
     val digest = MessageDigest.getInstance("SHA-512")
     digest.reset()
     digest.update(salt)

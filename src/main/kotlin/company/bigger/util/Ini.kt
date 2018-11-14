@@ -26,7 +26,7 @@ open class Ini {
  * @param defaultValue
  * @return boolean
  */
-fun getBooleanValue(s: String, defaultValue: Boolean = false): Boolean {
+internal fun getBooleanValue(s: String, defaultValue: Boolean = false): Boolean {
     if (s.isEmpty()) return defaultValue
 
     return if ("Y".equals(s, ignoreCase = true))

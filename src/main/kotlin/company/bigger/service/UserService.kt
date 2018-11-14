@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
 
+/**
+ * The service to login the user and return the token.
+ */
 @Service
 class UserService(
     val loginService: LoginService,
@@ -20,7 +23,7 @@ class UserService(
     companion object {
         // user login result by UserName
         private val users = mutableMapOf<String, UserLoginModelResponse>()
-        const val ROLE = "USER"
+        internal const val ROLE = "USER"
     }
 
     private fun newToken(user: UserLoginModelResponse): String {
@@ -38,6 +41,10 @@ class UserService(
         return result
     }
 
+    /**
+     * Login the user and return the token if successful together with other helpful attributes.
+     * See also [LoginService]
+     */
     fun login(login: UserLoginModel): UserLoginModelResponse? {
         return using(sessionOf(HikariCP.dataSource())) { session ->
             val user = loginService.login(session, login)

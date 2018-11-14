@@ -18,7 +18,7 @@ import java.util.Date
 
 private val log = KotlinLogging.logger {}
 
-data class User(
+private data class User(
     val id: Int, // 1
     val isLocked: Boolean, // 42
     val dateAccountLocked: Timestamp?, // 43
@@ -30,6 +30,11 @@ data class User(
     val userName: String // 9
 )
 
+/**
+ * The login service to login the user.
+ * It validates the user in the database, check the password and is also responsible for user locking/unlocking.
+ * Note this service does NOT
+ */
 @Service
 class LoginService {
     @Value("\${user.password.hash:N}")
@@ -47,7 +52,21 @@ class LoginService {
     @Value("\${user.locking.max_login_attempt:10}")
     private lateinit var USER_LOCKING_MAX_LOGIN_ATTEMPT: String
 
-    private fun lockOrUnlockUser(session: Session, user: User) {
+    private fun lockUser(session: Session, user: User) {
+        val MAX_INACTIVE_PERIOD_DAY = USER_LOCKING_MAX_INACTIVE_PERIOD_DAY.toInt()
+        val now = Date().time
+
+        if (MAX_INACTIVE_PERIOD_DAY > 0 && !user.isLocked && user.dateLastLogin != null) {
+            val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
+            if (days > MAX_INACTIVE_PERIOD_DAY) {
+                "/sql/lockUser.sql".asResource { s2 ->
+                    session.run(queryOf(s2, user.id).asUpdate)
+                }
+            }
+        }
+    }
+
+    private fun unlockUser(session: Session, user: User) {
         val MAX_ACCOUNT_LOCK_MINUTES = USER_LOCKING_MAX_ACCOUNT_LOCK_MINUTES.toInt()
         val MAX_INACTIVE_PERIOD_DAY = USER_LOCKING_MAX_INACTIVE_PERIOD_DAY.toInt()
         val now = Date().time
@@ -67,22 +86,16 @@ class LoginService {
                 }
             }
         }
-
-        if (MAX_INACTIVE_PERIOD_DAY > 0 && !user.isLocked && user.dateLastLogin != null) {
-            val days = (now - user.dateLastLogin.time) / (1000 * 60 * 60 * 24)
-            if (days > MAX_INACTIVE_PERIOD_DAY) {
-                "/sql/lockUser.sql".asResource { s2 ->
-                    session.run(queryOf(s2, user.id).asUpdate)
-                }
-            }
-        }
     }
 
     private fun lockOrUnlockUsers(session: Session, users: List<User>) {
-        for (user in users) { lockOrUnlockUser(session, user) }
+        for (user in users) {
+            lockUser(session, user)
+            unlockUser(session, user)
+        }
     }
 
-    fun findByUsername(session: Session, appUser: String?): List<User> {
+    private fun findByUsername(session: Session, appUser: String?): List<User> {
         log.info("User=$appUser")
 
         if (appUser == null || appUser.isEmpty()) {
@@ -109,35 +122,24 @@ class LoginService {
         }
     }
 
-    fun getUsers(session: Session, appUser: String, appPwd: String): Array<User> {
-        log.info("User=$appUser")
-
-        if (appUser.isEmpty()) {
-            log.warn("No Apps User")
-            return arrayOf()
-        }
-        if (appPwd.isEmpty()) {
-            log.warn("No Apps Password")
-            return arrayOf()
-        }
-        val users = findByUsername(session, appUser)
-        if (users.isEmpty()) {
-            log.error("UserPwdError {}", appUser)
-            return arrayOf()
-        }
-
-        val hash_password = getBooleanValue(USER_PASSWORD_HASH)
+    private fun doFilterAuthenticatedUsers(users: List<User>, appPwd: String): Pair<List<User>, List<User>> {
+        val hashPassword = getBooleanValue(USER_PASSWORD_HASH)
         val MAX_PASSWORD_AGE = USER_LOCKING_MAX_PASSWORD_AGE_DAY.toInt()
 
         val authenticatedUsers = users.filter {
             when {
-                hash_password -> authenticateHash(it, appPwd)
+                hashPassword -> authenticateHash(it, appPwd)
                 else -> // password not hashed
                     it.password != null && it.password == appPwd
             } && !it.isLocked
         }
 
         val failedUsers = users - authenticatedUsers
+
+        return Pair(authenticatedUsers, failedUsers)
+    }
+
+    private fun lockUnauthenticatedUsers(session: Session, failedUsers: List<User>) {
         failedUsers.forEach {
             if (!it.isLocked) {
                 val count = (it.failedLoginCount ?: 0) + 1
@@ -160,6 +162,28 @@ class LoginService {
                 }
             }
         }
+    }
+
+    private fun getUsers(session: Session, appUser: String, appPwd: String): Array<User> {
+        log.info("User=$appUser")
+
+        if (appUser.isEmpty()) {
+            log.warn("No Apps User")
+            return arrayOf()
+        }
+        if (appPwd.isEmpty()) {
+            log.warn("No Apps Password")
+            return arrayOf()
+        }
+        val users = findByUsername(session, appUser)
+        if (users.isEmpty()) {
+            log.error("UserPwdError {}", appUser)
+            return arrayOf()
+        }
+
+        val (authenticatedUsers, failedUsers) = doFilterAuthenticatedUsers(users, appPwd)
+
+        lockUnauthenticatedUsers(session, failedUsers)
 
         return authenticatedUsers.toTypedArray()
     }
@@ -179,6 +203,11 @@ class LoginService {
         }
     }
 
+    /**
+     * Verify if the user sent in [login] exists in the database, if it has access to one client only or the clientId
+     * is provided, the password fits. Also make sure that the user is locked or unlocked.
+     * Note this function does not work with token.
+     */
     fun login(session: Session, login: ILogin): UserLoginModelResponse {
         val users = getUsers(session, login.loginName, login.password)
         val user = users.firstOrNull { users.count() == 1 || it.clientId == login.clientId }
