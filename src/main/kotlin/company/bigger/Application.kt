@@ -61,5 +61,5 @@ fun main(args: Array<String>) {
         val rollbar = Rollbar.init(ConfigBuilder.withAccessToken("602b880210304119b6435c4129061714").build())
         rollbar.log("idempiere-micro-spring started")
     }
-    SpringApplication.run(Application::class.java, *args)
+    SpringApplication.run(arrayOf<Class<*>>(Application::class.java), args)
 }
