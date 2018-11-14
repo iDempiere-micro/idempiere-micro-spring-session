@@ -8,5 +8,5 @@ iDempiere Session Microservice in Spring Kotlin
 The repository for iDempiere Kotlin Spring Boot back-end Session microservice compatible with iDempiere.
 You can use it to:
 
-- login a user and obtain a JWT token
-- use the JWT token with GraphQL calls to [iDempiere Micro Spring backend](https://github.com/iDempiere-micro/idempiere-micro-spring) or [iDempire Micro OSGi backend](https://github.com/iDempiere-micro/idempiere-micro) (later).
+  - login a user and obtain a JWT token
+  - use the JWT token with GraphQL calls to [iDempiere Micro Spring backend](https://github.com/iDempiere-micro/idempiere-micro-spring) or [iDempire Micro OSGi backend](https://github.com/iDempiere-micro/idempiere-micro) (later).
