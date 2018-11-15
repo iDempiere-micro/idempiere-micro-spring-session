@@ -7,4 +7,6 @@ import feign.RequestLine
 internal interface LoginClient {
     @RequestLine("GET /session/{username}/login/{password}")
     fun login(@Param("username") username: String, @Param("password") password: String): UserLoginModelResponse
+    @RequestLine("GET /session/{token}/validate")
+    fun validateToken(@Param("token") token: String): UserLoginModelResponse
 }

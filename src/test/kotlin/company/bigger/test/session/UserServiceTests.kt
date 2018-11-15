@@ -3,7 +3,10 @@ package company.bigger.test.session
 import company.bigger.dto.UserLoginModel
 import company.bigger.test.support.BaseTest
 import company.bigger.test.support.randomString
+import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -15,6 +18,15 @@ class UserServiceTests : BaseTest() {
         const val GardenAdmin = "GardenAdmin"
         const val GardenUser = "GardenUser"
         const val System = "System"
+    }
+
+    /**
+     * Makes sure the hidden field to allow tweak the expiration is turned off before every test
+     */
+    @Before
+    fun prepareExpiration() {
+        // be 100% sure the expiration works normally
+        userService.overrideExpiration = null
     }
 
     /**
@@ -67,5 +79,60 @@ class UserServiceTests : BaseTest() {
         }
         val result = userService.login(UserLoginModel(GardenAdmin, GardenAdmin))
         assertNull(result?.token)
+    }
+
+    /**
+     * GardenUser can login (service) and the token is valid (name + clientId)
+     */
+    @Test
+    fun `GardenUser can login (service) and the token is valid`() {
+        val result = userService.login(UserLoginModel(GardenUser, GardenUser))
+        val user = userService.validateToken(result?.token ?: "")
+        assertEquals(GardenUser, user?.loginName)
+        assertEquals(11, user?.clientId)
+    }
+
+    /**
+     * GardenUser can login (service) and the token is invalid when expired
+     */
+    @Test
+    fun `GardenUser can login (service) and the token is not valid if expired`() {
+        // we set the expiration the way it is immediately invalid
+        userService.overrideExpiration = -1
+        val result = userService.login(UserLoginModel(GardenUser, GardenUser))
+        // return back to normal expiration
+        userService.overrideExpiration = null
+        val user = userService.validateToken(result?.token ?: "")
+        assertNull(user)
+    }
+
+    /**
+     * GardenUser can login twice(service) and the first token is invalid then
+     */
+    @Test
+    fun `GardenUser can login twice(service) and the first token is invalid then`() {
+        val result = userService.login(UserLoginModel(GardenUser, GardenUser))
+        val user = userService.validateToken(result?.token ?: "")
+        assertNotNull(user)
+
+        // we need to sleep here for the while in order to make the tokens different
+        Thread.sleep(1500)
+
+        val result2 = userService.login(UserLoginModel(GardenUser, GardenUser))
+        val user2 = userService.validateToken(result2?.token ?: "")
+
+        assertNotEquals(user2?.token, user?.token)
+
+        assertNotNull(user2)
+        val user3 = userService.validateToken(result?.token ?: "")
+        assertNull(user3)
+    }
+
+    /**
+     * Random token is invalid
+     */
+    @Test
+    fun `Random token is invalid`() {
+        assertNull(userService.validateToken(randomString(10)))
     }
 }
