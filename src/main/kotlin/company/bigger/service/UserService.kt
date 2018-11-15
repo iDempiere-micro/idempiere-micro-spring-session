@@ -55,9 +55,6 @@ class UserService(
                 .signWith(SignatureAlgorithm.HS256, jwtSecret).compact()
     }
 
-    /**
-     * Find the user by the token. This will be replaces by a Redis call later + cached if more services are running.
-     */
     private fun findByToken(token: String) = users.values.firstOrNull { it.token == token }
 
     /**
