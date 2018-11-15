@@ -11,3 +11,9 @@ You can use it to:
 
 -   login a user and obtain a JWT token
 -   use the JWT token with GraphQL calls to [iDempiere Micro Spring backend](https://github.com/iDempiere-micro/idempiere-micro-spring) or [iDempire Micro OSGi backend](https://github.com/iDempiere-micro/idempiere-micro) (later).
+
+## Installation
+The JAR is available thanks to 
+[![](https://jitpack.io/v/iDempiere-micro/idempiere-micro-spring-session.svg)](https://jitpack.io/#iDempiere-micro/idempiere-micro-spring-session). It is always build at an address `https://jitpack.io/com/github/iDempiere-micro/idempiere-micro-spring-session/$VERSION/idempiere-micro-spring-session-$VERSION.jar`. The version 0.0.2 is available at [
+[![](https://jitpack.io/v/iDempiere-micro/idempiere-micro-spring-session.svg)](https://jitpack.io/#iDempiere-micro/idempiere-micro-spring-session)](
+[![](https://jitpack.io/v/iDempiere-micro/idempiere-micro-spring-session.svg)](https://jitpack.io/#iDempiere-micro/idempiere-micro-spring-session)).
