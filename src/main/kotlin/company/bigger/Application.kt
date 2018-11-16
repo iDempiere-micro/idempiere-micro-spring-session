@@ -2,8 +2,8 @@ package company.bigger
 
 import com.rollbar.notifier.Rollbar
 import com.rollbar.notifier.config.ConfigBuilder
-import company.bigger.util.Ini
 import kotliquery.HikariCP
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cache.annotation.EnableCaching
@@ -34,6 +34,22 @@ open class Application : WebMvcConfigurer {
                 .allowCredentials(false)
                 .maxAge(3600)
     }
+}
+
+/**
+ * The original Ini class from iDempiere to collect the configuration parameters.
+ * It is still used for the connection string etc.
+ * Note some local connection variables (like `jwt.issuer`) if used once-only
+ * are declared in the place where needed.
+ */
+@Configuration
+open class Ini {
+    @Value("\${session.url}")
+    internal lateinit var url: String
+    @Value("\${session.username}")
+    internal lateinit var username: String
+    @Value("\${session.password}")
+    internal lateinit var password: String
 }
 
 /**

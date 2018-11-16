@@ -278,6 +278,19 @@
 
         <!-- JWT -->
 
+        <dependency>
+            <groupId>com.github.iDempiere-micro</groupId>
+            <artifactId>idempiere-micro-session-core</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.iDempiere-micro</groupId>
+            <artifactId>idempiere-micro-test-support</artifactId>
+            <version>0.0.2</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 	<build>
@@ -459,6 +472,10 @@
             <id>bintray-americanexpress-maven</id>
             <url>https://dl.bintray.com/americanexpress/maven</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <reporting>
@@ -493,4 +510,6 @@
             </plugin>                    
         </plugins>
     </reporting>
+
+
 </project>

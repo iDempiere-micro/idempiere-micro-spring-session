@@ -1,5 +1,4 @@
 package company.bigger.web.config
-import company.bigger.service.UserService.Companion.ROLE
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -22,14 +21,12 @@ open class WebSecurityConfig : WebSecurityConfigurerAdapter() {
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/webjars/**").permitAll()
                 .antMatchers("/session/**").permitAll()
-                .antMatchers("/graphiql/**").permitAll()
                 .antMatchers("/swagger-resources/**").permitAll()
                 .antMatchers("/subscriptions/**").permitAll()
                 .antMatchers("/vendor/**").permitAll()
                 .antMatchers("/actuator/**").permitAll()
 
                 .anyRequest().authenticated()
-                .anyRequest().hasAuthority(ROLE)
 
                 // From https://github.com/bfwg/springboot-jwt-starter
                 .and().csrf().disable()
